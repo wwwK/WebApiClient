@@ -36,17 +36,8 @@ namespace WebApiClientCore
                 .Select(item => CreateActionInvoker(item))
                 .ToArray();
 
-            var proxyType = ProxyTypeEmitBuilder.Build(interfaceType, this.actionInvokers);
-
-
+            var proxyType = FindProxyType(interfaceType) ?? HttpApiProxyTypeBuilder.Build(interfaceType, this.actionInvokers);
             this.proxyTypeCtor = Lambda.CreateCtorFunc<IActionInterceptor, IActionInvoker[], THttpApi>(proxyType);
-
-            static IActionInvoker CreateActionInvoker(ApiActionDescriptor apiAction)
-            {
-                var resultType = apiAction.Return.DataType.Type;
-                var invokerType = typeof(MultiplexedActionInvoker<>).MakeGenericType(resultType);
-                return invokerType.CreateInstance<IActionInvoker>(apiAction);
-            }
         }
 
         /// <summary>
@@ -58,6 +49,46 @@ namespace WebApiClientCore
         {
             return this.proxyTypeCtor.Invoke(actionInterceptor, this.actionInvokers);
         }
+
+        /// <summary>
+        /// 创建Action执行器
+        /// </summary>
+        /// <param name="apiAction">Api描述</param>
+        /// <returns></returns>
+        private static IActionInvoker CreateActionInvoker(ApiActionDescriptor apiAction)
+        {
+            var resultType = apiAction.Return.DataType.Type;
+            var invokerType = typeof(MultiplexedActionInvoker<>).MakeGenericType(resultType);
+            return invokerType.CreateInstance<IActionInvoker>(apiAction);
+        }
+
+        /// <summary>
+        /// 从接口所在程序集查找代理类
+        /// </summary>
+        /// <param name="interfaceType">接口类型</param>
+        /// <returns></returns>
+        private static Type? FindProxyType(Type interfaceType)
+        {
+            const string proxyTypePref = "____";
+            foreach (var type in interfaceType.Assembly.GetTypes())
+            {
+                if (type.IsClass && type.IsAbstract == false && type.Name == $"{proxyTypePref}{interfaceType.Name}")
+                {
+                    var proxyType = type;
+                    if (interfaceType.IsGenericType && proxyType.IsGenericType)
+                    {
+                        proxyType = proxyType.MakeGenericType(interfaceType.GetGenericArguments());
+                    }
+
+                    if (interfaceType.IsAssignableFrom(proxyType) == true)
+                    {
+                        return proxyType;
+                    }
+                }
+            }
+            return null;
+        }
+
 
 
         /// <summary>

@@ -44,6 +44,8 @@ namespace App
             // Ìí¼Ó¿ØÖÆÆ÷
             services.AddControllers().AddXmlSerializerFormatters();
 
+            services.AddHttpApi<IXX<User>>();
+
             // ×¢²áuserApi
             services.AddHttpApi<IUserApi>(o =>
             {

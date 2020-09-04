@@ -9,7 +9,7 @@ namespace App.Clients
     {
         private readonly IUserApi userApi;
 
-        public UserService(IUserApi userApi)
+        public UserService(IUserApi userApi, IXX<User> xx)
         {
             this.userApi = userApi;
         }
