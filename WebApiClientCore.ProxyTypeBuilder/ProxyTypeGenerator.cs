@@ -17,7 +17,7 @@ namespace WebApiClientCore.ProxyTypeBuilder
                 foreach (var httpApi in receiver.GetHttpApiTypes(context.Compilation))
                 {
                     var builder = new ProxyTypeBuilder(httpApi);
-                    context.AddSource(builder.HintName, builder.ToSourceText());
+                    context.AddSource(builder.CtorName, builder.ToSourceText());
                 }
             }
         }

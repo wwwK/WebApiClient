@@ -9,7 +9,7 @@ namespace WebApiClientCore
     /// <summary>
     /// 提供IHttpApi代理类的类型创建
     /// </summary>
-    static class HttpApiProxyTypeBuilder
+    static class ProxyTypeEmitBuilder
     {
         /// <summary>
         /// IActionInterceptor的Intercept方法

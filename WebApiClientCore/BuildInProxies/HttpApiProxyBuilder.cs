@@ -36,7 +36,9 @@ namespace WebApiClientCore
                 .Select(item => CreateActionInvoker(item))
                 .ToArray();
 
-            var proxyType = HttpApiProxyTypeBuilder.Build(interfaceType, this.actionInvokers);
+            var proxyType = ProxyTypeEmitBuilder.Build(interfaceType, this.actionInvokers);
+
+
             this.proxyTypeCtor = Lambda.CreateCtorFunc<IActionInterceptor, IActionInvoker[], THttpApi>(proxyType);
 
             static IActionInvoker CreateActionInvoker(ApiActionDescriptor apiAction)
