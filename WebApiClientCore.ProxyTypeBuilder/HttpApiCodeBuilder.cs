@@ -88,7 +88,7 @@ namespace WebApiClientCore.ProxyTypeBuilder
             }
             builder.AppendLine($"namespace {this.Namespace}");
             builder.AppendLine("{");
-            builder.AppendLine($"\t[ProxyType(typeof({BaseInterfaceTypeName}))]");
+            builder.AppendLine($"\t[HttpApiProxyClass(typeof({BaseInterfaceTypeName}))]");
             builder.AppendLine($"\tclass {this.Name}:{this.BaseInterface}");
             builder.AppendLine("\t{");
             

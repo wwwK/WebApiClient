@@ -3,10 +3,10 @@
 namespace WebApiClientCore
 {
     /// <summary>
-    /// 表示代理类型的特性
+    /// 表示HttpApi代理类的特性
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public sealed class ProxyTypeAttribute : Attribute
+    public sealed class HttpApiProxyClassAttribute : Attribute
     {
         /// <summary>
         /// 获取所代理的目标接口
@@ -17,7 +17,7 @@ namespace WebApiClientCore
         /// 代理类型的特性
         /// </summary>
         /// <param name="httpApiType">所代理的目标接口</param>
-        public ProxyTypeAttribute(Type httpApiType)
+        public HttpApiProxyClassAttribute(Type httpApiType)
         {
             this.HttpApiType = httpApiType;
         }

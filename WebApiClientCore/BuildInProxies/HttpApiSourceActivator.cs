@@ -52,8 +52,8 @@ namespace WebApiClientCore
 
             foreach (var proxyType in interfaceType.Assembly.GetTypes())
             {
-                var attribute = proxyType.GetCustomAttribute<ProxyTypeAttribute>();
-                if (attribute != null && attribute.HttpApiType == httpApiType)
+                var proxyClass = proxyType.GetCustomAttribute<HttpApiProxyClassAttribute>();
+                if (proxyClass != null && proxyClass.HttpApiType == httpApiType)
                 {
                     return proxyType.IsGenericType
                         ? proxyType.MakeGenericType(interfaceType.GetGenericArguments())
