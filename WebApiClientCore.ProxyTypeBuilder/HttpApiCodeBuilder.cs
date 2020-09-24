@@ -17,11 +17,6 @@ namespace WebApiClientCore.ProxyTypeBuilder
         private readonly INamedTypeSymbol httpApi;
 
         /// <summary>
-        /// 前缀
-        /// </summary>
-        private readonly string prefix;
-
-        /// <summary>
         /// using
         /// </summary>
         public IEnumerable<string> Usings
@@ -29,6 +24,7 @@ namespace WebApiClientCore.ProxyTypeBuilder
             get
             {
                 yield return "using System;";
+                yield return "using System.Diagnostics;";      
                 yield return "using WebApiClientCore;";
             }
         }
@@ -36,32 +32,36 @@ namespace WebApiClientCore.ProxyTypeBuilder
         /// <summary>
         /// 命名空间
         /// </summary>
-        public string Namespace => this.httpApi.ContainingNamespace.ToString();
+        public string Namespace => $"{this.httpApi.ContainingNamespace}.SourceGenerator";
 
         /// <summary>
         /// 基础接口
         /// </summary>
-        public string BaseInterface => this.httpApi.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+        public string BaseInterface => this.httpApi.ToDisplayString();
+
+        /// <summary>
+        /// 基础接口类型名称
+        /// </summary>
+        public string BaseInterfaceTypeName => this.httpApi.IsGenericType ? this.httpApi.ConstructUnboundGenericType().ToDisplayString() : this.httpApi.ToDisplayString();
 
         /// <summary>
         /// 类名
         /// </summary>
-        public string Name => $"{prefix}{this.httpApi.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}";
+        public string Name => $"{this.httpApi.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}";
 
         /// <summary>
         /// 构造器名
         /// </summary>
-        public string CtorName => $"{prefix}{this.httpApi.Name}";
+        public string CtorName => $"{this.httpApi.Name}";
 
         /// <summary>
         /// HttpApi代码构建器
         /// </summary>
         /// <param name="httpApi"></param>
         /// <param name="prefix">类型前缀</param>
-        public HttpApiCodeBuilder(INamedTypeSymbol httpApi, string prefix = "____")
+        public HttpApiCodeBuilder(INamedTypeSymbol httpApi)
         {
             this.httpApi = httpApi;
-            this.prefix = prefix;
         }
 
         /// <summary>
@@ -88,9 +88,13 @@ namespace WebApiClientCore.ProxyTypeBuilder
             }
             builder.AppendLine($"namespace {this.Namespace}");
             builder.AppendLine("{");
+            builder.AppendLine($"\t[ProxyType(typeof({BaseInterfaceTypeName}))]");
             builder.AppendLine($"\tclass {this.Name}:{this.BaseInterface}");
             builder.AppendLine("\t{");
+            
+            builder.AppendLine("\t\t[DebuggerBrowsable(DebuggerBrowsableState.Never)]");
             builder.AppendLine("\t\tprivate readonly IActionInterceptor ____interceptor;");
+            builder.AppendLine("\t\t[DebuggerBrowsable(DebuggerBrowsableState.Never)]");
             builder.AppendLine("\t\tprivate readonly IActionInvoker[] ____actionInvokers;");
 
             builder.AppendLine($"\t\tpublic {this.CtorName}(IActionInterceptor interceptor,IActionInvoker[] actionInvokers)");

@@ -12,7 +12,7 @@ namespace WebApiClientCore.ProxyTypeBuilder
         /// 初始化
         /// </summary>
         /// <param name="context"></param>
-        public void Initialize(InitializationContext context)
+        public void Initialize(GeneratorInitializationContext context)
         {
             context.RegisterForSyntaxNotifications(() => new HttpApiSyntaxReceiver());
         }
@@ -21,7 +21,7 @@ namespace WebApiClientCore.ProxyTypeBuilder
         /// 执行
         /// </summary>
         /// <param name="context"></param>
-        public void Execute(SourceGeneratorContext context)
+        public void Execute(GeneratorExecutionContext context)
         {
             if (context.SyntaxReceiver is HttpApiSyntaxReceiver receiver)
             {

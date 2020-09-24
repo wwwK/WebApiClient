@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using WebApiClientCore.Exceptions;
 
 namespace WebApiClientCore
@@ -45,21 +46,18 @@ namespace WebApiClientCore
         /// <returns></returns>
         private static Type? FindProxyType(Type interfaceType)
         {
-            const string proxyTypePref = "____";
-            foreach (var type in interfaceType.Assembly.GetTypes())
-            {
-                if (type.IsClass && type.IsAbstract == false && type.Name == $"{proxyTypePref}{interfaceType.Name}")
-                {
-                    var proxyType = type;
-                    if (interfaceType.IsGenericType && proxyType.IsGenericType)
-                    {
-                        proxyType = proxyType.MakeGenericType(interfaceType.GetGenericArguments());
-                    }
+            var httpApiType = interfaceType.IsGenericType
+                ? interfaceType.GetGenericTypeDefinition()
+                : interfaceType;
 
-                    if (interfaceType.IsAssignableFrom(proxyType) == true)
-                    {
-                        return proxyType;
-                    }
+            foreach (var proxyType in interfaceType.Assembly.GetTypes())
+            {
+                var attribute = proxyType.GetCustomAttribute<ProxyTypeAttribute>();
+                if (attribute != null && attribute.HttpApiType == httpApiType)
+                {
+                    return proxyType.IsGenericType
+                        ? proxyType.MakeGenericType(interfaceType.GetGenericArguments())
+                        : proxyType;
                 }
             }
             return null;
