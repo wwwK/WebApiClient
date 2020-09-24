@@ -18,7 +18,14 @@ namespace WebApiClientCore
         /// <returns></returns>
         public static THttpApi Create<THttpApi>(IActionInterceptor actionInterceptor)
         {
-            return new HttpApiEmitActivator<THttpApi>().CreateInstance(actionInterceptor);
+            if (HttpApiReflectActivator<THttpApi>.IsSupported == true)
+            {
+                return new HttpApiReflectActivator<THttpApi>().CreateInstance(actionInterceptor);
+            }
+            else
+            {
+                return new HttpApiEmitActivator<THttpApi>().CreateInstance(actionInterceptor);
+            }
         }
     }
 }
