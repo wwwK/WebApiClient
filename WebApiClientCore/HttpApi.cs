@@ -10,24 +10,17 @@ namespace WebApiClientCore
     public static class HttpApi
     {
         /// <summary>
-        /// 获取接口的命名
-        /// 该命名用于接口对应的Options名称 
-        /// </summary>
-        /// <typeparam name="THttpApi">接口类型</typeparam>
-        /// <returns></returns>
-        public static string GetName<THttpApi>( )
-        {
-            return GetName(typeof(THttpApi));
-        }
-
-        /// <summary>
-        /// 获取接口的命名
-        /// 该命名用于接口对应的Options名称
+        /// 获取接口的别名
+        /// 该别名可用于接口对应的OptionsName
         /// </summary>
         /// <param name="httpApiType">接口类型</param>
         /// <returns></returns>
-        public static string GetName(Type httpApiType)
+        public static string GetName(Type? httpApiType)
         {
+            if (httpApiType == null)
+            {
+                return string.Empty;
+            }
             return httpApiType.FullName;
         }
 
@@ -71,7 +64,7 @@ namespace WebApiClientCore
         /// <returns></returns>
         public static THttpApi Create<THttpApi>(IActionInterceptor actionInterceptor)
         {
-            return HttpApiProxyBuilder<THttpApi>.Build(actionInterceptor);
+            return HttpApiFactory.Create<THttpApi>(actionInterceptor);
         }
 
 

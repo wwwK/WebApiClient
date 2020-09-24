@@ -1,23 +1,13 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using WebApiClientCore.Extensions.OAuths;
+﻿using System;
 
 namespace WebApiClientCore.Attributes
 {
     /// <summary>
-    /// 表示password授权方式的token应用特性
-    /// 需要先注册services.AddPasswordCredentialsTokenProvider
+    /// 表示token应用特性
+    /// 需要注册services.AddPasswordCredentialsTokenProvider
     /// </summary> 
+    [Obsolete("请使用OAuthTokenAttribute替换")]
     public class PasswordCredentialsTokenAttribute : OAuthTokenAttribute
     {
-        /// <summary>
-        /// 获取token提供者
-        /// </summary>
-        /// <param name="context">上下文</param>
-        /// <returns></returns>
-        protected override ITokenProvider GetTokenProvider(ApiRequestContext context)
-        {
-            var providerType = typeof(IPasswordCredentialsTokenProvider<>).MakeGenericType(context.ApiAction.InterfaceType);
-            return (ITokenProvider)context.HttpContext.ServiceProvider.GetRequiredService(providerType);
-        }
     }
 }

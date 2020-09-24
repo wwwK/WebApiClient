@@ -1,17 +1,19 @@
 ﻿using System;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using WebApiClientCore.Attributes;
 
-namespace WebApiClientCore.Extensions.OAuths
+namespace WebApiClientCore.Extensions.OAuths.TokenProviders
 {
     /// <summary>
-    /// 定义Token客户端的接口
-    /// </summary>
+    /// 定义OAuth2的Token客户端的接口
+    /// </summary>    
     [LoggingFilter]
     [XmlReturn(Enable = false)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     [JsonReturn(EnsureMatchAcceptContentType = false, EnsureSuccessStatusCode = false)]
-    public interface IOAuthClient
+    public interface IOAuthTokenClientApi
     {
         /// <summary>
         /// 以client_credentials授权方式获取token

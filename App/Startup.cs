@@ -53,13 +53,13 @@ namespace App
                 o.HttpHost = new Uri("http://localhost:5000/");
             });
 
-            // 注册与配置token提者选项
+            // 注册与配置clientId模式的token提者选项
             services.AddClientCredentialsTokenProvider<IUserApi>(o =>
             {
                 o.Endpoint = new Uri("http://localhost:5000/api/tokens");
                 o.Credentials.Client_id = "clientId";
                 o.Credentials.Client_secret = "xxyyzz";
-            });
+            }); 
 
             // userApi客户端后台服务
             services.AddScoped<UserService>().AddHostedService<UserHostedService>();

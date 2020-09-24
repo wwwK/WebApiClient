@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using System;
 using System.Threading.Tasks;
 using WebApiClientCore.Extensions.OAuths.Exceptions;
@@ -7,13 +6,12 @@ using WebApiClientCore.Extensions.OAuths.Exceptions;
 namespace WebApiClientCore.Extensions.OAuths.TokenProviders
 {
     /// <summary>
-    /// 表示Client身份信息token提供者
+    /// 表示Client模式的token提供者
     /// </summary>
-    /// <typeparam name="THttpApi"></typeparam>
-    public class ClientCredentialsTokenProvider<THttpApi> : TokenProvider, IClientCredentialsTokenProvider<THttpApi>
+    public class ClientCredentialsTokenProvider : TokenProvider
     {
         /// <summary>
-        /// Client身份信息token提供者
+        /// Client模式的token提供者
         /// </summary>
         /// <param name="services"></param> 
         public ClientCredentialsTokenProvider(IServiceProvider services)
@@ -23,30 +21,30 @@ namespace WebApiClientCore.Extensions.OAuths.TokenProviders
 
         /// <summary>
         /// 请求获取token
-        /// </summary> 
-        /// <param name="serviceProvider">服务提供者</param>
+        /// </summary>
+        /// <param name="serviceProvider"></param>
         /// <returns></returns>
         protected override Task<TokenResult?> RequestTokenAsync(IServiceProvider serviceProvider)
         {
-            var options = this.GetCredentialsOptions(serviceProvider);
+            var options = this.GetOptionsValue<ClientCredentialsOptions>();
             if (options.Endpoint == null)
             {
                 throw new TokenEndPointNullException();
             }
 
-            var oAuthClient = serviceProvider.GetRequiredService<IOAuthClient>();
-            return oAuthClient.RequestTokenAsync(options.Endpoint, options.Credentials);
+            var clientApi = serviceProvider.GetRequiredService<IOAuthTokenClientApi>();
+            return clientApi.RequestTokenAsync(options.Endpoint, options.Credentials);
         }
 
         /// <summary>
         /// 刷新token
-        /// </summary> 
-        /// <param name="serviceProvider">服务提供者</param>
-        /// <param name="refresh_token">刷新token</param>
+        /// </summary>
+        /// <param name="serviceProvider"></param>
+        /// <param name="refresh_token"></param>
         /// <returns></returns>
-        protected override Task<TokenResult?> RefreshTokenAsync(IServiceProvider serviceProvider, string? refresh_token)
+        protected override Task<TokenResult?> RefreshTokenAsync(IServiceProvider serviceProvider, string refresh_token)
         {
-            var options = this.GetCredentialsOptions(serviceProvider);
+            var options = this.GetOptionsValue<ClientCredentialsOptions>();
             if (options.Endpoint == null)
             {
                 throw new TokenEndPointNullException();
@@ -57,7 +55,7 @@ namespace WebApiClientCore.Extensions.OAuths.TokenProviders
                 return this.RequestTokenAsync(serviceProvider);
             }
 
-            var credentials = new RefreshTokenCredentials
+            var refreshCredentials = new RefreshTokenCredentials
             {
                 Client_id = options.Credentials.Client_id,
                 Client_secret = options.Credentials.Client_secret,
@@ -65,19 +63,8 @@ namespace WebApiClientCore.Extensions.OAuths.TokenProviders
                 Refresh_token = refresh_token
             };
 
-            var oAuthClient = serviceProvider.GetRequiredService<IOAuthClient>();
-            return oAuthClient.RefreshTokenAsync(options.Endpoint, credentials);
-        }
-
-        /// <summary>
-        /// 获取配置信息
-        /// </summary>
-        /// <param name="serviceProvider"></param>
-        /// <returns></returns>
-        private ClientCredentialsOptions GetCredentialsOptions(IServiceProvider serviceProvider)
-        {
-            var name = HttpApi.GetName<THttpApi>();
-            return serviceProvider.GetService<IOptionsMonitor<ClientCredentialsOptions>>().Get(name);
+            var clientApi = serviceProvider.GetRequiredService<IOAuthTokenClientApi>();
+            return clientApi.RefreshTokenAsync(options.Endpoint, refreshCredentials);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using WebApiClientCore.Extensions.OAuths;
@@ -6,10 +7,15 @@ using WebApiClientCore.Extensions.OAuths;
 namespace WebApiClientCore.Attributes
 {
     /// <summary>
-    /// 表示OAuth授权的token的token应用抽象特性
+    /// 表示token应用特性
     /// </summary> 
-    public abstract class OAuthTokenAttribute : ApiFilterAttribute
+    public class OAuthTokenAttribute : ApiFilterAttribute
     {
+        /// <summary>
+        /// 获取或设置token提供者的查找模式
+        /// </summary>
+        public TypeMatchMode TokenProviderSearchMode { get; set; } = TypeMatchMode.TypeOrBaseTypes;
+
         /// <summary>
         /// 请求之前
         /// </summary>
@@ -42,7 +48,11 @@ namespace WebApiClientCore.Attributes
         /// </summary>
         /// <param name="context">上下文</param>
         /// <returns></returns>
-        protected abstract ITokenProvider GetTokenProvider(ApiRequestContext context);
+        protected virtual ITokenProvider GetTokenProvider(ApiRequestContext context)
+        {
+            var factory = context.HttpContext.ServiceProvider.GetRequiredService<ITokenProviderFactory>();
+            return factory.Create(context.ApiAction.InterfaceType, this.TokenProviderSearchMode);
+        }
 
         /// <summary>
         /// 应用token
