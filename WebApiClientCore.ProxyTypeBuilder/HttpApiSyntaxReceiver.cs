@@ -6,12 +6,26 @@ using System.Linq;
 
 namespace WebApiClientCore.ProxyTypeBuilder
 {
-
+    /// <summary>
+    /// httpApi语法接收器
+    /// </summary>
     class HttpApiSyntaxReceiver : ISyntaxReceiver
     {
+        /// <summary>
+        /// 接口标记名称
+        /// </summary>
+        private const string ihttpApiTypeName = "WebApiClientCore.IHttpApi";
+
+        /// <summary>
+        /// 接口列表
+        /// </summary>
         private readonly List<InterfaceDeclarationSyntax> interfaceList = new List<InterfaceDeclarationSyntax>();
 
-        public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
+        /// <summary>
+        /// 访问语法树 
+        /// </summary>
+        /// <param name="syntaxNode"></param>
+        void ISyntaxReceiver.OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
             if (syntaxNode is InterfaceDeclarationSyntax syntax)
             {
@@ -19,9 +33,13 @@ namespace WebApiClientCore.ProxyTypeBuilder
             }
         }
 
+        /// <summary>
+        /// 获取所有HttpApi符号
+        /// </summary>
+        /// <param name="compilation"></param>
+        /// <returns></returns>
         public IEnumerable<INamedTypeSymbol> GetHttpApiTypes(Compilation compilation)
         {
-            const string ihttpApiTypeName = "WebApiClientCore.IHttpApi";
             var iHttpApiType = compilation.GetTypeByMetadataName(ihttpApiTypeName);
             if (iHttpApiType == null)
             {

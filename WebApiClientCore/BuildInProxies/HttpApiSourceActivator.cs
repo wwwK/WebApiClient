@@ -5,9 +5,10 @@ namespace WebApiClientCore
 {
     /// <summary>
     /// 表示THttpApi的实例创建器
+    /// 通过查找类型代理类型创建实例
     /// </summary>
     /// <typeparam name="THttpApi"></typeparam>
-    class HttpApiReflectActivator<THttpApi> : HttpApiActivator<THttpApi>
+    class HttpApiSourceActivator<THttpApi> : HttpApiActivator<THttpApi>
     {
         /// <summary>
         /// 代理类

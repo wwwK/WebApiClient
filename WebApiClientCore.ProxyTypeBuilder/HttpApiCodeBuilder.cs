@@ -6,10 +6,24 @@ using System.Text;
 
 namespace WebApiClientCore.ProxyTypeBuilder
 {
-    class ProxyTypeBuilder
+    /// <summary>
+    /// HttpApi代码构建器
+    /// </summary>
+    class HttpApiCodeBuilder
     {
+        /// <summary>
+        /// 接口符号
+        /// </summary>
         private readonly INamedTypeSymbol httpApi;
 
+        /// <summary>
+        /// 前缀
+        /// </summary>
+        private readonly string prefix;
+
+        /// <summary>
+        /// using
+        /// </summary>
         public IEnumerable<string> Usings
         {
             get
@@ -19,19 +33,51 @@ namespace WebApiClientCore.ProxyTypeBuilder
             }
         }
 
+        /// <summary>
+        /// 命名空间
+        /// </summary>
         public string Namespace => this.httpApi.ContainingNamespace.ToString();
 
+        /// <summary>
+        /// 基础接口
+        /// </summary>
         public string BaseInterface => this.httpApi.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
 
-        public string Name => $"____{this.httpApi.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}";
+        /// <summary>
+        /// 类名
+        /// </summary>
+        public string Name => $"{prefix}{this.httpApi.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}";
 
-        public string CtorName => $"____{this.httpApi.Name}";
+        /// <summary>
+        /// 构造器名
+        /// </summary>
+        public string CtorName => $"{prefix}{this.httpApi.Name}";
 
-        public ProxyTypeBuilder(INamedTypeSymbol httpApi)
+        /// <summary>
+        /// HttpApi代码构建器
+        /// </summary>
+        /// <param name="httpApi"></param>
+        /// <param name="prefix">类型前缀</param>
+        public HttpApiCodeBuilder(INamedTypeSymbol httpApi, string prefix = "____")
         {
             this.httpApi = httpApi;
+            this.prefix = prefix;
         }
 
+        /// <summary>
+        /// 转换为SourceText
+        /// </summary>
+        /// <returns></returns>
+        public SourceText ToSourceText()
+        {
+            var code = this.ToString();
+            return SourceText.From(code, Encoding.UTF8);
+        }
+
+        /// <summary>
+        /// 转换为字符串
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             //System.Diagnostics.Debugger.Launch();
@@ -69,6 +115,12 @@ namespace WebApiClientCore.ProxyTypeBuilder
             return builder.ToString();
         }
 
+        /// <summary>
+        /// 构建方法
+        /// </summary>
+        /// <param name="method"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
         private static string BuildMethod(IMethodSymbol method, int index)
         {
             var builder = new StringBuilder();
@@ -83,12 +135,6 @@ namespace WebApiClientCore.ProxyTypeBuilder
             builder.AppendLine($"\t\t\treturn ({method.ReturnType})____result;");
             builder.AppendLine("\t\t}");
             return builder.ToString();
-        }
-
-        public SourceText ToSourceText()
-        {
-            var code = this.ToString();
-            return SourceText.From(code, Encoding.UTF8);
         }
     }
 }

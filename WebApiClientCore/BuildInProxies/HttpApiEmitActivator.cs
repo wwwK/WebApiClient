@@ -8,6 +8,7 @@ namespace WebApiClientCore
 {
     /// <summary>
     /// 表示THttpApi的实例创建器
+    /// 通过查Emit创建代理类型然后创建实例
     /// </summary>
     /// <typeparam name="THttpApi"></typeparam>
     class HttpApiEmitActivator<THttpApi> : HttpApiActivator<THttpApi>
