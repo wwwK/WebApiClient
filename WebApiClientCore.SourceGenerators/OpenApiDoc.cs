@@ -10,7 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace WebApiClientCore.OpenApi.SourceGenerator
+namespace WebApiClientCore.SourceGenerators
 {
     /// <summary>
     /// 表示OpenApi描述

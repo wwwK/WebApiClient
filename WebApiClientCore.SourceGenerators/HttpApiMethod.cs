@@ -5,7 +5,7 @@ using NSwag.CodeGeneration.CSharp;
 using NSwag.CodeGeneration.CSharp.Models;
 using System.Text.RegularExpressions;
 
-namespace WebApiClientCore.OpenApi.SourceGenerator
+namespace WebApiClientCore.SourceGenerators
 {
     /// <summary>
     /// 表示WebApiClient的请求方法数据模型

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace WebApiClientCore.ProxyTypeBuilder
+namespace WebApiClientCore.SourceGenerators.HttpApiProxy
 {
     /// <summary>
     /// HttpApi代码构建器
@@ -43,7 +43,7 @@ namespace WebApiClientCore.ProxyTypeBuilder
         /// <summary>
         /// 命名空间
         /// </summary>
-        public string Namespace => $"{this.httpApi.ContainingNamespace}.SourceGenerator";
+        public string Namespace => $"{this.httpApi.ContainingNamespace}.SourceGenerators";
 
         /// <summary>
         /// 基础接口名

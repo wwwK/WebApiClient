@@ -11,7 +11,7 @@
 		<ProjectReference Include="..\WebApiClientCore.Extensions.OAuths\WebApiClientCore.Extensions.OAuths.csproj" />
 		<ProjectReference Include="..\WebApiClientCore.Extensions.NewtonsoftJson\WebApiClientCore.Extensions.NewtonsoftJson.csproj" />
 		<ProjectReference Include="..\WebApiClientCore.Analyzers\WebApiClientCore.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-		<ProjectReference Include="..\WebApiClientCore.ProxyTypeBuilder\WebApiClientCore.ProxyTypeBuilder.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\WebApiClientCore.SourceGenerators.HttpApiProxy\WebApiClientCore.SourceGenerators.HttpApiProxy.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 
 	<ItemGroup>

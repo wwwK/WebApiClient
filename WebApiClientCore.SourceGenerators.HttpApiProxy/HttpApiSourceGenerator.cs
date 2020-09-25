@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace WebApiClientCore.ProxyTypeBuilder
+namespace WebApiClientCore.SourceGenerators.HttpApiProxy
 {
     /// <summary>
     /// HttpApi代码生成器

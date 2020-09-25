@@ -1,7 +1,7 @@
 ﻿using CommandLine;
 using CommandLine.Text;
 
-namespace WebApiClientCore.OpenApi.SourceGenerator
+namespace WebApiClientCore.SourceGenerators
 {
     /// <summary>
     /// 表示命令选项

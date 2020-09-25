@@ -7,7 +7,7 @@ using System.IO;
 using System.Text;
 using System.Xml.Linq;
 
-namespace WebApiClientCore.OpenApi.SourceGenerator
+namespace WebApiClientCore.SourceGenerators
 {
     /// <summary>
     /// 提供视图模板操作
@@ -193,7 +193,7 @@ namespace WebApiClientCore.OpenApi.SourceGenerator
 
                     builder.AddUsing("NSwag");
                     builder.AddUsing("System");
-                    builder.AddUsing("WebApiClientCore.OpenApi.SourceGenerator");
+                    builder.AddUsing("WebApiClientCore.SourceGenerators");
                 }));
             }
         }
