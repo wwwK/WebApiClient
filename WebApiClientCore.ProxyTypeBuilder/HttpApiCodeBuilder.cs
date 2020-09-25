@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,6 +18,16 @@ namespace WebApiClientCore.ProxyTypeBuilder
         private readonly INamedTypeSymbol httpApi;
 
         /// <summary>
+        /// 拦截器变量名
+        /// </summary>
+        private readonly string interceptorFieldName = $"interceptor_{Environment.TickCount}";
+
+        /// <summary>
+        /// action执行器变量名
+        /// </summary>
+        private readonly string actionInvokersFieldName = $"actionInvokers_{Environment.TickCount}";
+
+        /// <summary>
         /// using
         /// </summary>
         public IEnumerable<string> Usings
@@ -24,7 +35,7 @@ namespace WebApiClientCore.ProxyTypeBuilder
             get
             {
                 yield return "using System;";
-                yield return "using System.Diagnostics;";      
+                yield return "using System.Diagnostics;";
                 yield return "using WebApiClientCore;";
             }
         }
@@ -35,24 +46,24 @@ namespace WebApiClientCore.ProxyTypeBuilder
         public string Namespace => $"{this.httpApi.ContainingNamespace}.SourceGenerator";
 
         /// <summary>
-        /// 基础接口
+        /// 基础接口名
         /// </summary>
-        public string BaseInterface => this.httpApi.ToDisplayString();
+        public string BaseInterfaceName => this.httpApi.ToDisplayString();
 
         /// <summary>
-        /// 基础接口类型名称
+        /// 代理的接口类型名称
         /// </summary>
-        public string BaseInterfaceTypeName => this.httpApi.IsGenericType ? this.httpApi.ConstructUnboundGenericType().ToDisplayString() : this.httpApi.ToDisplayString();
+        public string HttpApiTypeName => this.httpApi.IsGenericType ? this.httpApi.ConstructUnboundGenericType().ToDisplayString() : this.httpApi.ToDisplayString();
 
         /// <summary>
         /// 类名
         /// </summary>
-        public string Name => $"{this.httpApi.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}";
+        public string ClassName => this.httpApi.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
 
         /// <summary>
         /// 构造器名
         /// </summary>
-        public string CtorName => $"{this.httpApi.Name}";
+        public string CtorName => this.httpApi.Name;
 
         /// <summary>
         /// HttpApi代码构建器
@@ -88,19 +99,20 @@ namespace WebApiClientCore.ProxyTypeBuilder
             }
             builder.AppendLine($"namespace {this.Namespace}");
             builder.AppendLine("{");
-            builder.AppendLine($"\t[HttpApiProxyClass(typeof({BaseInterfaceTypeName}))]");
-            builder.AppendLine($"\tclass {this.Name}:{this.BaseInterface}");
+            builder.AppendLine($"\t[HttpApiProxyClass(typeof({this.HttpApiTypeName}))]");
+            builder.AppendLine($"\tclass {this.ClassName}:{this.BaseInterfaceName}");
             builder.AppendLine("\t{");
-            
+
             builder.AppendLine("\t\t[DebuggerBrowsable(DebuggerBrowsableState.Never)]");
-            builder.AppendLine("\t\tprivate readonly IActionInterceptor ____interceptor;");
+            builder.AppendLine($"\t\tprivate readonly IActionInterceptor {this.interceptorFieldName};");
+
             builder.AppendLine("\t\t[DebuggerBrowsable(DebuggerBrowsableState.Never)]");
-            builder.AppendLine("\t\tprivate readonly IActionInvoker[] ____actionInvokers;");
+            builder.AppendLine($"\t\tprivate readonly IActionInvoker[] {this.actionInvokersFieldName};");
 
             builder.AppendLine($"\t\tpublic {this.CtorName}(IActionInterceptor interceptor,IActionInvoker[] actionInvokers)");
             builder.AppendLine("\t\t{");
-            builder.AppendLine("\t\t\tthis.____interceptor = interceptor;");
-            builder.AppendLine("\t\t\tthis.____actionInvokers = actionInvokers;");
+            builder.AppendLine($"\t\t\tthis.{this.interceptorFieldName} = interceptor;");
+            builder.AppendLine($"\t\t\tthis.{this.actionInvokersFieldName} = actionInvokers;");
             builder.AppendLine("\t\t}");
 
             var index = 0;
@@ -108,7 +120,7 @@ namespace WebApiClientCore.ProxyTypeBuilder
             {
                 if (member is IMethodSymbol method)
                 {
-                    var methodCode = BuildMethod(method, index);
+                    var methodCode = this.BuildMethod(method, index);
                     builder.AppendLine(methodCode);
                     index += 1;
                 }
@@ -125,7 +137,7 @@ namespace WebApiClientCore.ProxyTypeBuilder
         /// <param name="method"></param>
         /// <param name="index"></param>
         /// <returns></returns>
-        private static string BuildMethod(IMethodSymbol method, int index)
+        private string BuildMethod(IMethodSymbol method, int index)
         {
             var builder = new StringBuilder();
             var parameters = method.Parameters.Select(item => $"{item.Type} {item.Name}");
@@ -133,10 +145,7 @@ namespace WebApiClientCore.ProxyTypeBuilder
 
             builder.AppendLine($"\t\tpublic {method.ReturnType} {method.Name}( {string.Join(",", parameters)} )");
             builder.AppendLine("\t\t{");
-            builder.AppendLine($"\t\t\tvar ____arguments = new object[] {{ {string.Join(",", parameterNames)} }};");
-            builder.AppendLine($"\t\t\tvar ____actionInvoker = this.____actionInvokers[{index}];");
-            builder.AppendLine("\t\t\tvar ____result = this.____interceptor.Intercept(____actionInvoker, ____arguments);");
-            builder.AppendLine($"\t\t\treturn ({method.ReturnType})____result;");
+            builder.AppendLine($"\t\t\treturn ({method.ReturnType})this.{this.interceptorFieldName}.Intercept(this.{this.actionInvokersFieldName}[{index}], new object[] {{ {string.Join(",", parameterNames)} }});");
             builder.AppendLine("\t\t}");
             return builder.ToString();
         }
