@@ -145,12 +145,12 @@ namespace WebApiClientCore.SourceGenerators.HttpApiProxy
         private string BuildMethod(IMethodSymbol method, int index)
         {
             var builder = new StringBuilder();
-            var parameters = method.Parameters.Select(item => $"{item.Type} {item.Name}");
-            var parameterNames = method.Parameters.Select(item => item.Name);
+            var parametersString = string.Join(",", method.Parameters.Select(item => $"{item.Type} {item.Name}"));
+            var parameterNamesString = string.Join(",", method.Parameters.Select(item => item.Name));
 
-            builder.AppendLine($"\t\tpublic {method.ReturnType} {method.Name}( {string.Join(",", parameters)} )");
+            builder.AppendLine($"\t\tpublic {method.ReturnType} {method.Name}( {parametersString} )");
             builder.AppendLine("\t\t{");
-            builder.AppendLine($"\t\t\treturn ({method.ReturnType})this.{this.interceptorFieldName}.Intercept(this.{this.actionInvokersFieldName}[{index}], new object[] {{ {string.Join(",", parameterNames)} }});");
+            builder.AppendLine($"\t\t\treturn ({method.ReturnType})this.{this.interceptorFieldName}.Intercept(this.{this.actionInvokersFieldName}[{index}], new object[] {{ {parameterNamesString} }});");
             builder.AppendLine("\t\t}");
             return builder.ToString();
         }
