@@ -89,6 +89,7 @@ namespace WebApiClientCore
             }
 
             var apiMethods = interfaceType.GetInterfaces().Append(interfaceType)
+                .OrderBy(item=>item.Name)
                 .SelectMany(item => item.GetMethods())
                 .Select(item => item.EnsureApiMethod())
                 .ToArray();

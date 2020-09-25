@@ -91,7 +91,6 @@ namespace WebApiClientCore.SourceGenerators.HttpApiProxy
         /// <returns></returns>
         public override string ToString()
         {
-            //System.Diagnostics.Debugger.Launch();
             var builder = new StringBuilder();
             foreach (var item in this.Usings)
             {
@@ -116,18 +115,24 @@ namespace WebApiClientCore.SourceGenerators.HttpApiProxy
             builder.AppendLine("\t\t}");
 
             var index = 0;
-            foreach (var member in this.httpApi.GetMembers())
+            var interfaces = this.httpApi.AllInterfaces.Concat(new[] { this.httpApi }).OrderBy(item => item.Name);
+            foreach (var @interface in interfaces)
             {
-                if (member is IMethodSymbol method)
+                foreach (var member in @interface.GetMembers())
                 {
-                    var methodCode = this.BuildMethod(method, index);
-                    builder.AppendLine(methodCode);
-                    index += 1;
+                    if (member is IMethodSymbol method)
+                    {
+                        var methodCode = this.BuildMethod(method, index);
+                        builder.AppendLine(methodCode);
+                        index += 1;
+                    }
                 }
             }
 
             builder.AppendLine("\t}");
             builder.AppendLine("}");
+
+            // System.Diagnostics.Debugger.Launch();
             return builder.ToString();
         }
 
