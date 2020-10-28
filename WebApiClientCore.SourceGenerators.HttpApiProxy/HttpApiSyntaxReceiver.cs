@@ -2,7 +2,6 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace WebApiClientCore.SourceGenerators.HttpApiProxy
 {
@@ -48,14 +47,10 @@ namespace WebApiClientCore.SourceGenerators.HttpApiProxy
 
             foreach (var @interface in this.interfaceList)
             {
-                var model = compilation.GetSemanticModel(@interface.SyntaxTree);
-                var symbol = model.GetDeclaredSymbol(@interface);
-                if (symbol != null)
+                var interfaceSymbol = compilation.GetSemanticModel(@interface.SyntaxTree).GetDeclaredSymbol(@interface);
+                if (interfaceSymbol != null && interfaceSymbol.AllInterfaces.Contains(iHttpApiType))
                 {
-                    if (symbol.AllInterfaces.Any(item => item.Equals(iHttpApiType)))
-                    {
-                        yield return symbol;
-                    }
+                    yield return interfaceSymbol;
                 }
             }
         }
