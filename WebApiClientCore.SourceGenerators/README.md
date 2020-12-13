@@ -1,4 +1,4 @@
-## WebApiClientCore.OpenApi.SourceGenerator
+## WebApiClientCore.SourceGenerators
  
 > 将OpenApi的本地或远程文档解析生成WebApiClientCore的接口定义代码文件
 

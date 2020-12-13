@@ -9,6 +9,14 @@ using WebApiClientCore.Parameters;
 
 namespace App.Clients
 {
+
+
+    public interface IXX<T> : IHttpApi
+    {
+        [HttpGet]
+        Task<string> GetAsync(T model);
+    }
+
     /// <summary>
     /// 用户操作接口
     /// </summary>    

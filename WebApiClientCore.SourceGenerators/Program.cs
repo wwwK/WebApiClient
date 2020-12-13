@@ -1,6 +1,6 @@
 ﻿using CommandLine;
 
-namespace WebApiClientCore.OpenApi.SourceGenerator
+namespace WebApiClientCore.SourceGenerators
 {
     class Program
     {

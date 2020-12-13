@@ -64,9 +64,15 @@ namespace WebApiClientCore
         /// <returns></returns>
         public static THttpApi Create<THttpApi>(IActionInterceptor actionInterceptor)
         {
-            return new HttpApiEmitActivator<THttpApi>().CreateInstance(actionInterceptor);
+            if (HttpApiSourceActivator<THttpApi>.IsSupported == true)
+            {
+                return new HttpApiSourceActivator<THttpApi>().CreateInstance(actionInterceptor);
+            }
+            else
+            {
+                return new HttpApiEmitActivator<THttpApi>().CreateInstance(actionInterceptor);
+            } 
         }
-
 
         /// <summary>
         /// 表示httpApi方法调用的拦截器

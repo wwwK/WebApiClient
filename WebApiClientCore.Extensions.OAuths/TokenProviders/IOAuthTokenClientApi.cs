@@ -13,7 +13,7 @@ namespace WebApiClientCore.Extensions.OAuths.TokenProviders
     [XmlReturn(Enable = false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
     [JsonReturn(EnsureMatchAcceptContentType = false, EnsureSuccessStatusCode = false)]
-    public interface IOAuthTokenClientApi
+    public interface IOAuthTokenClientApi : IHttpApi
     {
         /// <summary>
         /// 以client_credentials授权方式获取token

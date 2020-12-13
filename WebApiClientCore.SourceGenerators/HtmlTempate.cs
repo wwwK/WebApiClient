@@ -1,6 +1,6 @@
 ﻿using RazorEngineCore;
 
-namespace WebApiClientCore.OpenApi.SourceGenerator
+namespace WebApiClientCore.SourceGenerators
 {
     /// <summary>
     /// html模板
