@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using WebApiClientCore.Attributes;
+using WebApiClientCore.Implementations;
 using Xunit;
 
 namespace WebApiClientCore.Test.Attributes.ParameterAttributes
@@ -14,7 +13,7 @@ namespace WebApiClientCore.Test.Attributes.ParameterAttributes
         [Fact]
         public async Task OnRequestAsyncTest()
         {
-            var apiAction = new ApiActionDescriptor(typeof(IMyApi).GetMethod("PostAsync"));
+            var apiAction = new DefaultApiActionDescriptor(typeof(IMyApi).GetMethod("PostAsync"));
             var context = new TestRequestContext(apiAction, new
             {
                 @class = 123,

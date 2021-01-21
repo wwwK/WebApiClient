@@ -6,7 +6,7 @@ namespace WebApiClientCore.Attributes
 {
     /// <summary>
     /// 表示请求服务http绝对完整主机域名
-    /// 例如http://www.abc.com/或http://www.abc.com/path/
+    /// 例如http://www.abc.com/
     /// </summary>
     [DebuggerDisplay("Host = {Host}")]
     public class HttpHostAttribute : HttpHostBaseAttribute
@@ -17,9 +17,9 @@ namespace WebApiClientCore.Attributes
         public Uri Host { get; }
 
         /// <summary>
-        /// 请求服务的根路径      
+        /// 请求服务http绝对完整主机域名      
         /// </summary>
-        /// <param name="host">例如http://www.abc.com/或http://www.abc.com/path/</param>
+        /// <param name="host">例如http://www.abc.com</param>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="UriFormatException"></exception>
         public HttpHostAttribute(string host)

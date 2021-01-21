@@ -1,13 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
+using WebApiClientCore.Internals;
 
 namespace WebApiClientCore.Serialization
 {
     /// <summary>
-    /// 默认的keyValue序列化工具
+    /// keyValue序列化工具
     /// </summary>
-    public class KeyValueSerializer : IKeyValueSerializer
+    public static class KeyValueSerializer
     {
         /// <summary>
         /// 默认的序列化选项
@@ -21,7 +25,7 @@ namespace WebApiClientCore.Serialization
         /// <param name="obj">对象实例</param>
         /// <param name="options">选项</param>
         /// <returns></returns>
-        public IList<KeyValue> Serialize(string key, object? obj, KeyValueSerializerOptions? options)
+        public static IList<KeyValue> Serialize(string key, object? obj, KeyValueSerializerOptions? options)
         {
             var kvOptions = options ?? defaultOptions;
             if (obj == null)
@@ -35,14 +39,44 @@ namespace WebApiClientCore.Serialization
             }
 
             var objType = obj.GetType();
-            if (objType == typeof(string))
+            var typeCode = Type.GetTypeCode(objType);
+
+            // 时间类型要经进json序列化，因为很有可能有转换器
+            if (typeCode == TypeCode.String ||
+                typeCode == TypeCode.Int32 ||
+                typeCode == TypeCode.Decimal ||
+                typeCode == TypeCode.Double ||
+                typeCode == TypeCode.Single)
             {
                 var keyValue = new KeyValue(key, obj.ToString());
                 return new List<KeyValue>(1) { keyValue };
             }
 
-            var jsonOptions = kvOptions.GetJsonSerializerOptions();
-            using var bufferWriter = new BufferWriter<byte>();
+            if (obj is IEnumerable<KeyValuePair<string, string>> keyValues)
+            {
+                // 排队字典类型，字典类型要经过json序列化
+                if (objType.IsInheritFrom<IDictionary>() == false)
+                {
+                    // key的值不经过PropertyNamingPolicy转换，保持原始值
+                    return keyValues.Select(item => (KeyValue)item).ToList();
+                }
+            }
+
+            return GetKeyValueList(key, obj, objType, kvOptions);
+        }
+
+        /// <summary>
+        /// 获取键值对
+        /// </summary>
+        /// <param name="key">对象名称</param>
+        /// <param name="obj">对象实例</param>
+        /// <param name="objType">对象类型</param>
+        /// <param name="options">选项</param>
+        /// <returns></returns>
+        private static IList<KeyValue> GetKeyValueList(string key, object obj, Type objType, KeyValueSerializerOptions options)
+        {
+            var jsonOptions = options.GetJsonSerializerOptions();
+            using var bufferWriter = new RecyclableBufferWriter<byte>();
             using var utf8JsonWriter = new Utf8JsonWriter(bufferWriter, new JsonWriterOptions
             {
                 Indented = false,
@@ -51,32 +85,20 @@ namespace WebApiClientCore.Serialization
             });
 
             System.Text.Json.JsonSerializer.Serialize(utf8JsonWriter, obj, objType, jsonOptions);
-            var utf8JsonReader = new Utf8JsonReader(bufferWriter.GetWrittenSpan(), new JsonReaderOptions
+            var utf8JsonReader = new Utf8JsonReader(bufferWriter.WrittenSpan, new JsonReaderOptions
             {
                 MaxDepth = jsonOptions.MaxDepth,
                 CommentHandling = jsonOptions.ReadCommentHandling,
                 AllowTrailingCommas = jsonOptions.AllowTrailingCommas,
             });
 
-            return this.GetKeyValueList(key, ref utf8JsonReader, kvOptions);
-        }
-
-        /// <summary>
-        /// 获取键值对
-        /// </summary>
-        /// <param name="key">根键名</param>
-        /// <param name="reader">utf8JsonReader</param>
-        /// <param name="options">选项</param>
-        /// <returns></returns>
-        protected virtual IList<KeyValue> GetKeyValueList(string key, ref Utf8JsonReader reader, KeyNamingOptions options)
-        {
             if (options.KeyNamingStyle == KeyNamingStyle.ShortName)
             {
-                return GetShortNameKeyValueList(key, ref reader);
+                return GetShortNameKeyValueList(key, ref utf8JsonReader);
             }
             else
             {
-                return GetFullNameKeyValueList(key, ref reader, options);
+                return GetFullNameKeyValueList(key, ref utf8JsonReader, options);
             }
         }
 

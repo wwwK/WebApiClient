@@ -39,7 +39,7 @@ namespace WebApiClientCore.SourceGenerators
                 throw new ArgumentNullException(nameof(name));
             }
 
-            var path = $"Views\\{name}";
+            var path = Path.Combine("Views", name);
             return new CSharpHtml<T>(path);
         }
     }

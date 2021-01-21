@@ -1,4 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
+using WebApiClientCore.Internals;
 
 namespace WebApiClientCore.Benchmarks.Buffers
 {
@@ -7,7 +8,7 @@ namespace WebApiClientCore.Benchmarks.Buffers
         [Benchmark]
         public void Rent()
         {
-            using (new BufferWriter<byte>()) { }
+            using (new RecyclableBufferWriter<byte>()) { }
         }
 
         [Benchmark]

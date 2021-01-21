@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using Microsoft.Extensions.Logging;
+using System.Net.Http;
 using System.Threading.Tasks;
 using WebApiClientCore.Exceptions;
 
@@ -20,9 +21,16 @@ namespace WebApiClientCore.Attributes
             var method = context.HttpContext.RequestMessage.Method;
             if (method == HttpMethod.Get || method == HttpMethod.Head)
             {
-                var message = Resx.unsupported_SetContent.Format(method);
-                throw new ApiInvalidConfigException(message);
+                var loggerFactory = context.HttpContext.ServiceProvider.GetService<ILoggerFactory>();
+                if (loggerFactory != null)
+                {
+                    var action = context.ActionDescriptor.Member;
+                    var categoryName = $"{action.DeclaringType?.Namespace}.{action.DeclaringType?.Name}.{action.Name}";
+                    var logger = loggerFactory.CreateLogger(categoryName);
+                    logger.LogWarning(Resx.gethead_Content_Warning.Format(method));
+                }
             }
+
             await this.SetHttpContentAsync(context).ConfigureAwait(false);
         }
 

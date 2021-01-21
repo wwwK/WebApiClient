@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using WebApiClientCore.Exceptions;
+using WebApiClientCore.Internals.Utilities;
 
 namespace WebApiClientCore.Attributes
 {
@@ -71,7 +72,10 @@ namespace WebApiClientCore.Attributes
         /// <returns></returns>
         public Task OnRequestAsync(ApiRequestContext context)
         {
-            context.HttpContext.RequestMessage.Headers.Accept.Add(this.AcceptContentType);
+            if (context.ActionDescriptor.Return.DataType.IsRawType == false)
+            {
+                context.HttpContext.RequestMessage.Headers.Accept.Add(this.AcceptContentType);
+            }
             return Task.CompletedTask;
         }
 
@@ -82,7 +86,7 @@ namespace WebApiClientCore.Attributes
         /// <returns></returns>
         public async Task OnResponseAsync(ApiResponseContext context)
         {
-            if (context.ApiAction.Return.DataType.IsRawType == true)
+            if (context.ActionDescriptor.Return.DataType.IsRawType == true)
             {
                 return;
             }
@@ -105,7 +109,7 @@ namespace WebApiClientCore.Attributes
         /// <returns></returns>
         protected virtual bool IsMatchAcceptContentType(MediaTypeHeaderValue? responseContentType)
         {
-            return string.Equals(this.AcceptContentType.MediaType, responseContentType?.MediaType, StringComparison.OrdinalIgnoreCase);
+            return MediaTypeUtil.IsMatch(this.AcceptContentType.MediaType, responseContentType?.MediaType);
         }
 
         /// <summary>

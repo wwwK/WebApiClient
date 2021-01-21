@@ -3,6 +3,8 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using WebApiClientCore.Attributes;
+using WebApiClientCore.Implementations;
+using WebApiClientCore.Internals;
 using WebApiClientCore.Serialization;
 using Xunit;
 
@@ -13,7 +15,7 @@ namespace WebApiClientCore.Test.Attributes.ParameterAttributes
         [Fact]
         public async Task BeforeRequestAsyncTest()
         {
-            var apiAction = new ApiActionDescriptor(typeof(IMyApi).GetMethod("PostAsync"));
+            var apiAction = new DefaultApiActionDescriptor(typeof(IMyApi).GetMethod("PostAsync"));
             var context = new TestRequestContext(apiAction, new
             {
                 name = "laojiu",
@@ -29,9 +31,9 @@ namespace WebApiClientCore.Test.Attributes.ParameterAttributes
             var body = await context.HttpContext.RequestMessage.Content.ReadAsUtf8ByteArrayAsync();
 
             var options = context.HttpContext.HttpApiOptions.JsonSerializeOptions;
-            using var buffer = new BufferWriter<byte>();
-            context.HttpContext.ServiceProvider.GetService<IJsonSerializer>().Serialize(buffer, context.Arguments[0], options);
-            var target = buffer.GetWrittenSpan().ToArray();
+            using var buffer = new RecyclableBufferWriter<byte>();
+            JsonBufferSerializer.Serialize(buffer, context.Arguments[0], options);
+            var target = buffer.WrittenSpan.ToArray();
             Assert.True(body.SequenceEqual(target));
         }
     }

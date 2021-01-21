@@ -1,10 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using WebApiClientCore.Attributes;
 using WebApiClientCore.Exceptions;
 using WebApiClientCore.HttpContents;
+using WebApiClientCore.Implementations;
 using WebApiClientCore.Serialization;
 using Xunit;
 
@@ -15,7 +15,7 @@ namespace WebApiClientCore.Test.Attributes.ReturnAttributes
         [Fact]
         public async Task JsonResultTest()
         {
-            var apiAction = new ApiActionDescriptor(typeof(ITestApi).GetMethod("JsonXmlAsync"));
+            var apiAction = new DefaultApiActionDescriptor(typeof(ITestApi).GetMethod("JsonXmlAsync"));
             var context = new TestRequestContext(apiAction, "laojiu");
             var responseContext = new ApiResponseContext(context);
 
@@ -24,7 +24,7 @@ namespace WebApiClientCore.Test.Attributes.ReturnAttributes
             var model = new TestModel();
             var jsonContent = new JsonContent();
             context.HttpContext.ResponseMessage.Content = jsonContent;
-            context.HttpContext.ServiceProvider.GetRequiredService<IJsonSerializer>().Serialize(jsonContent, model, null);
+            JsonBufferSerializer.Serialize(jsonContent, model, null);
 
             var attr = new JsonReturnAttribute();
             await attr.OnResponseAsync(responseContext);
@@ -35,14 +35,14 @@ namespace WebApiClientCore.Test.Attributes.ReturnAttributes
         [Fact]
         public async Task XmlResultTest()
         {
-            var apiAction = new ApiActionDescriptor(typeof(ITestApi).GetMethod("JsonXmlAsync"));
+            var apiAction = new DefaultApiActionDescriptor(typeof(ITestApi).GetMethod("JsonXmlAsync"));
             var context = new TestRequestContext(apiAction, "laojiu");
             var responseContext = new ApiResponseContext(context);
 
             context.HttpContext.RequestMessage.Method = HttpMethod.Post;
 
             var model = new TestModel();
-            var xml = context.HttpContext.ServiceProvider.GetRequiredService<IXmlSerializer>().Serialize(model, null);
+            var xml = XmlSerializer.Serialize(model, null);
             context.HttpContext.ResponseMessage.Content = new XmlContent(xml, Encoding.UTF8);
 
             var attr = new XmlReturnAttribute();
@@ -55,7 +55,7 @@ namespace WebApiClientCore.Test.Attributes.ReturnAttributes
         [Fact]
         public async Task EnsureSuccessStatusCodeTest()
         {
-            var apiAction = new ApiActionDescriptor(typeof(ITestApi).GetMethod("JsonXmlAsync"));
+            var apiAction = new DefaultApiActionDescriptor(typeof(ITestApi).GetMethod("JsonXmlAsync"));
             var context = new TestRequestContext(apiAction, "laojiu");
             var responseContext = new ApiResponseContext(context);
 

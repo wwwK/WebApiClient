@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Net.Http;
-using WebApiClientCore.Exceptions;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace WebApiClientCore
 {
     /// <summary>
-    /// 提供创建THttpApi的代理实例
+    /// 提供HttpApi命名获取和方法获取等功能
     /// </summary>
     public static class HttpApi
     {
@@ -25,84 +26,81 @@ namespace WebApiClientCore
         }
 
         /// <summary>
-        /// 创建THttpApi的代理实例
+        /// 查找接口类型及其继承的接口的所有方法
         /// </summary>
-        /// <typeparam name="THttpApi"></typeparam>
-        /// <param name="httpClient">httpClient</param>
-        /// <param name="serviceProvider">服务提供者</param>
-        /// <param name="httpApiOptions">Api配置选项</param>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// <param name="httpApiType">接口类型</param> 
+        /// <exception cref="ArgumentException"></exception>
         /// <exception cref="NotSupportedException"></exception>
-        /// <exception cref="ProxyTypeCreateException"></exception>
         /// <returns></returns>
-        public static THttpApi Create<THttpApi>(HttpClient httpClient, IServiceProvider serviceProvider, HttpApiOptions httpApiOptions)
+        public static MethodInfo[] FindApiMethods(Type httpApiType)
         {
-            return Create<THttpApi>(new HttpClientContext(httpClient, serviceProvider, httpApiOptions));
+            if (httpApiType.IsInterface == false)
+            {
+                throw new ArgumentException(Resx.required_InterfaceType.Format(httpApiType.Name));
+            }
+
+            return httpApiType
+                .GetInterfaces()
+                .Append(httpApiType)
+                .SelectMany(item => item.GetMethods())
+                .Select(item => item.EnsureApiMethod())
+                .ToArray();
         }
 
         /// <summary>
-        /// 创建THttpApi的代理实例
+        /// 确保方法是支持的Api接口
         /// </summary>
-        /// <typeparam name="THttpApi"></typeparam>
-        /// <param name="httpClientContext">httpClient上下文</param>
-        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="NotSupportedException"></exception>
-        /// <exception cref="ProxyTypeCreateException"></exception>
         /// <returns></returns>
-        public static THttpApi Create<THttpApi>(HttpClientContext httpClientContext)
+        private static MethodInfo EnsureApiMethod(this MethodInfo method)
         {
-            return Create<THttpApi>(new ActionInterceptor(httpClientContext));
+            if (method.IsGenericMethod == true)
+            {
+                throw new NotSupportedException(Resx.unsupported_GenericMethod.Format(method));
+            }
+
+            if (method.IsSpecialName == true)
+            {
+                throw new NotSupportedException(Resx.unsupported_Property.Format(method));
+            }
+
+            if (method.IsTaskReturn() == false)
+            {
+                var message = Resx.unsupported_ReturnType.Format(method);
+                throw new NotSupportedException(message);
+            }
+
+            foreach (var parameter in method.GetParameters())
+            {
+                if (parameter.ParameterType.IsByRef == true)
+                {
+                    var message = Resx.unsupported_ByRef.Format(parameter);
+                    throw new NotSupportedException(message);
+                }
+            }
+
+            return method;
         }
 
         /// <summary>
-        /// 创建THttpApi的代理实例
+        /// 检测方法是否为Task或ITask返回值
         /// </summary>
-        /// <typeparam name="THttpApi"></typeparam>
-        /// <param name="actionInterceptor">Action拦截器</param>  
-        /// <exception cref="NotSupportedException"></exception>
-        /// <exception cref="ProxyTypeCreateException"></exception>
+        /// <param name="method"></param>
         /// <returns></returns>
-        public static THttpApi Create<THttpApi>(IActionInterceptor actionInterceptor)
+        private static bool IsTaskReturn(this MethodInfo method)
         {
-            if (HttpApiSourceActivator<THttpApi>.IsSupported == true)
+            if (method.ReturnType.IsInheritFrom<Task>())
             {
-                return new HttpApiSourceActivator<THttpApi>().CreateInstance(actionInterceptor);
-            }
-            else
-            {
-                return new HttpApiEmitActivator<THttpApi>().CreateInstance(actionInterceptor);
-            } 
-        }
-
-        /// <summary>
-        /// 表示httpApi方法调用的拦截器
-        /// </summary>
-        private class ActionInterceptor : IActionInterceptor
-        {
-            /// <summary>
-            /// 服务上下文
-            /// </summary>
-            private readonly HttpClientContext context;
-
-            /// <summary>
-            /// httpApi方法调用的拦截器
-            /// </summary>
-            /// <param name="context">服务上下文</param> 
-            public ActionInterceptor(HttpClientContext context)
-            {
-                this.context = context;
+                return true;
             }
 
-            /// <summary>
-            /// 拦截方法的调用
-            /// </summary>
-            /// <param name="actionInvoker">action执行器</param> 
-            /// <param name="arguments">方法的参数集合</param>
-            /// <returns></returns>
-            public object Intercept(IActionInvoker actionInvoker, object?[] arguments)
+            if (method.ReturnType.IsGenericType == false)
             {
-                return actionInvoker.Invoke(this.context, arguments);
+                return false;
             }
+
+            var taskType = method.ReturnType.GetGenericTypeDefinition();
+            return taskType == typeof(ITask<>);
         }
     }
 }

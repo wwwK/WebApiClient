@@ -1,4 +1,5 @@
 ﻿using System;
+using WebApiClientCore.Internals;
 
 namespace WebApiClientCore
 {
@@ -21,73 +22,98 @@ namespace WebApiClientCore
         /// <summary>
         /// 不区分大小写替换字符串
         /// </summary>
-        /// <param name="str"></param>
-        /// <param name="oldValue">原始值</param>
-        /// <param name="newValue">新值</param>
-        /// <param name="replacedString">替换后的字符中</param>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// <param name="source"></param>
+        /// <param name="oldValue">要替换的值</param>
+        /// <param name="newValue">替换的新值</param>
+        /// <param name="replaced">是否替换成功</param> 
         /// <returns></returns>
-        public static bool RepaceIgnoreCase(this string str, string oldValue, string? newValue, out string replacedString)
+        public static string RepaceIgnoreCase(this string source, ReadOnlySpan<char> oldValue, ReadOnlySpan<char> newValue, out bool replaced)
         {
-            if (string.IsNullOrEmpty(str) == true)
+            replaced = false;
+            if (string.IsNullOrEmpty(source) || oldValue.IsEmpty)
             {
-                replacedString = str;
-                return false;
+                return source;
             }
 
-            if (string.IsNullOrEmpty(oldValue) == true)
+            var index = 0;
+            var sourceSpan = source.AsSpan();
+            var builder = new ValueStringBuilder(stackalloc char[256]);
+
+            while ((index = FindIndexIgnoreCase(sourceSpan, oldValue)) > -1)
             {
-                throw new ArgumentNullException(nameof(oldValue));
+                builder.Append(sourceSpan.Slice(0, index));
+                builder.Append(newValue);
+                sourceSpan = sourceSpan.Slice(index + oldValue.Length);
+                replaced = true;
             }
 
-            var strSpan = str.AsSpan();
-            using var owner = ArrayPool.Rent<char>(strSpan.Length);
-            var strLowerSpan = owner.Array.AsSpan();
-            var length = strSpan.ToLowerInvariant(strLowerSpan);
-            strLowerSpan = strLowerSpan.Slice(0, length);
-
-            var oldValueLowerSpan = oldValue.ToLowerInvariant().AsSpan();
-            var newValueSpan = newValue.AsSpan();
-
-            var replaced = false;
-            using var writer = new BufferWriter<char>(strSpan.Length);
-
-            while (strLowerSpan.Length > 0)
+            if (replaced == true)
             {
-                var index = strLowerSpan.IndexOf(oldValueLowerSpan);
-                if (index > -1)
+                builder.Append(sourceSpan);
+                return builder.ToString();
+            }
+            return source;
+        }
+
+        /// <summary>
+        /// 查找索引
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private static int FindIndexIgnoreCase(ReadOnlySpan<char> source, ReadOnlySpan<char> value)
+        {
+            int ctrSource;  // index value into source
+            int ctrValue;   // index value into value
+            char sourceChar;    // Character for case lookup in source
+            char valueChar;     // Character for case lookup in value
+
+            var sourceCount = source.Length;
+            var valueCount = value.Length;
+
+            if (valueCount == 0)
+            {
+                return 0;
+            }
+
+            if (sourceCount < valueCount)
+            {
+                return -1;
+            }
+
+            var lastSourceStart = sourceCount - valueCount;
+            var firstValueChar = InvariantCaseFold(value[0]);
+            for (ctrSource = 0; ctrSource <= lastSourceStart; ctrSource++)
+            {
+                sourceChar = InvariantCaseFold(source[ctrSource]);
+                if (sourceChar != firstValueChar)
                 {
-                    // 左边未替换的
-                    var left = strSpan.Slice(0, index);
-                    writer.Write(left);
-
-                    // 替换的值
-                    writer.Write(newValueSpan);
-
-                    // 切割长度
-                    var sliceLength = index + oldValueLowerSpan.Length;
-
-                    // 原始值与小写值同步切割
-                    strSpan = strSpan.Slice(sliceLength);
-                    strLowerSpan = strLowerSpan.Slice(sliceLength);
-
-                    replaced = true;
+                    continue;
                 }
-                else
+
+                for (ctrValue = 1; ctrValue < valueCount; ctrValue++)
                 {
-                    // 替换过剩下的原始值
-                    if (replaced == true)
+                    sourceChar = InvariantCaseFold(source[ctrSource + ctrValue]);
+                    valueChar = InvariantCaseFold(value[ctrValue]);
+
+                    if (sourceChar != valueChar)
                     {
-                        writer.Write(strSpan);
+                        break;
                     }
+                }
 
-                    // 再也无匹配替换值，退出
-                    break;
+                if (ctrValue == valueCount)
+                {
+                    return ctrSource;
                 }
             }
 
-            replacedString = replaced ? writer.GetWrittenSpan().ToString() : str;
-            return replaced;
+            return -1;
+
+            static char InvariantCaseFold(char c)
+            {
+                return (uint)(c - 'a') <= 'z' - 'a' ? (char)(c - 0x20) : c;
+            }
         }
     }
 }

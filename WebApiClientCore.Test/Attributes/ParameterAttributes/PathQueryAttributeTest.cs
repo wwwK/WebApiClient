@@ -1,10 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
-using System.Web;
 using WebApiClientCore.Attributes;
+using WebApiClientCore.Implementations;
 using WebApiClientCore.Serialization;
 using Xunit;
 
@@ -15,7 +13,7 @@ namespace WebApiClientCore.Test.Attributes.ParameterAttributes
         [Fact]
         public async Task OnRequestAsyncTest()
         {
-            var apiAction = new ApiActionDescriptor(typeof(IMyApi).GetMethod("PostAsync"));
+            var apiAction = new DefaultApiActionDescriptor(typeof(IMyApi).GetMethod("PostAsync"));
             var context = new TestRequestContext(apiAction, new
             {
                 name = "laojiu",
@@ -28,7 +26,7 @@ namespace WebApiClientCore.Test.Attributes.ParameterAttributes
             var attr = new PathQueryAttribute();
             await attr.OnRequestAsync(new ApiParameterContext(context, 0));
 
-            var birthday = context.HttpContext.ServiceProvider.GetService<IKeyValueSerializer>().Serialize("time", DateTime.Parse("2010-10-10"), null)[0].Value;
+            var birthday = KeyValueSerializer.Serialize("time", DateTime.Parse("2010-10-10"), null)[0].Value;
             var target = new Uri("http://www.webapi.com?name=laojiu&birthDay=" + Uri.EscapeDataString(birthday));
             Assert.True(context.HttpContext.RequestMessage.RequestUri == target);
         }

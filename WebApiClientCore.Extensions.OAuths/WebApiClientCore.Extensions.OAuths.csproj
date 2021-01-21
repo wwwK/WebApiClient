@@ -8,10 +8,10 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Sign.snk</AssemblyOriginatorKeyFile>
 
-    <Version>1.1.2</Version>
+    <Version>2.0.0-beta1</Version>
     <Authors>laojiu</Authors>
     <Company>laojiu</Company>
-    <Copyright>Copyright © laojiu 2017-2020</Copyright>
+    <Copyright>Copyright © laojiu 2017-2021</Copyright>
     <Description>基于WebApiClientCore的token提供者</Description>
     <Summary>基于WebApiClientCore的token提供者</Summary>
 

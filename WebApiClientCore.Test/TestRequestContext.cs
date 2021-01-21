@@ -1,9 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 using System.Net.Http;
-using WebApiClientCore.ResponseCaches;
-using WebApiClientCore.Serialization;
+using WebApiClientCore.Implementations;
 
 namespace WebApiClientCore.Test
 {
@@ -25,16 +23,12 @@ namespace WebApiClientCore.Test
         private static HttpContext GetHttpContext()
         {
             var services = new ServiceCollection();
-            services.TryAddSingleton<IXmlSerializer, XmlSerializer>();
-            services.TryAddSingleton<IJsonSerializer, JsonSerializer>();
-            services.TryAddSingleton<IKeyValueSerializer, KeyValueSerializer>();
-            services.TryAddSingleton<IResponseCacheProvider, ResponseCacheProvider>();
 
             var requestServices = services.BuildServiceProvider();
             var options = new HttpApiOptions() { HttpHost = new Uri("http://www.webapi.com/") };
 
-            var httpClientContext = new HttpClientContext(new HttpClient(), requestServices, options);
-            return new HttpContext(httpClientContext);
+            var httpClientContext = new HttpClientContext(new HttpClient(), requestServices, options, string.Empty);
+            return new HttpContext(httpClientContext, new HttpApiRequestMessageImpl());
         }
     }
 }

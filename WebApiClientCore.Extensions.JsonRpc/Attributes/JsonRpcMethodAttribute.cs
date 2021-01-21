@@ -1,5 +1,7 @@
 ﻿using System.Threading.Tasks;
+using WebApiClientCore.Exceptions;
 using WebApiClientCore.Extensions.JsonRpc;
+using WebApiClientCore.Serialization;
 
 namespace WebApiClientCore.Attributes
 {
@@ -65,9 +67,7 @@ namespace WebApiClientCore.Attributes
         /// <returns></returns>
         public override Task OnRequestAsync(ApiRequestContext context)
         {
-            var parametrs = new JsonRpcParameters();
-            context.Properties.Set(typeof(JsonRpcParameters), parametrs);
-
+            context.Properties.Set(typeof(JsonRpcParameters), new JsonRpcParameters());
             return base.OnRequestAsync(context);
         }
 
@@ -76,21 +76,24 @@ namespace WebApiClientCore.Attributes
         /// </summary>
         /// <param name="context">上下文</param>
         /// <returns></returns>
-        Task IApiFilterAttribute.OnRequestAsync(ApiRequestContext context)
+        Task IApiFilter.OnRequestAsync(ApiRequestContext context)
         {
-            var jsonRpcContent = new JsonRpcContent(this.ContentType);
-            context.HttpContext.RequestMessage.Content = jsonRpcContent;
-
             var parameters = context.Properties.Get<JsonRpcParameters>(typeof(JsonRpcParameters));
+            if (parameters == null)
+            {
+                throw new ApiInvalidConfigException($"无法获取{nameof(JsonRpcParameters)}属性");
+            }
+
             var jsonRpcRequest = new JsonRpcRequest
             {
-                Method = this.method ?? context.ApiAction.Name,
+                Method = this.method ?? context.ActionDescriptor.Name,
                 Params = parameters.ToJsonRpcParams(this.ParamsStyle),
             };
 
-            var options = context.HttpContext.HttpApiOptions.JsonSerializeOptions;
-            var jsonSerializer = context.HttpContext.ServiceProvider.GetJsonSerializer();
-            jsonSerializer.Serialize(jsonRpcContent, jsonRpcRequest, options);
+            var jsonRpcContent = new JsonRpcContent(this.ContentType);
+            context.HttpContext.RequestMessage.Content = jsonRpcContent;
+            var options = context.HttpContext.HttpApiOptions.JsonSerializeOptions;          
+            JsonBufferSerializer.Serialize(jsonRpcContent, jsonRpcRequest, options);
 
             return Task.CompletedTask;
         }
@@ -100,7 +103,7 @@ namespace WebApiClientCore.Attributes
         /// </summary>
         /// <param name="context">上下文</param>
         /// <returns></returns>
-        Task IApiFilterAttribute.OnResponseAsync(ApiResponseContext context)
+        Task IApiFilter.OnResponseAsync(ApiResponseContext context)
         {
             return Task.CompletedTask;
         }

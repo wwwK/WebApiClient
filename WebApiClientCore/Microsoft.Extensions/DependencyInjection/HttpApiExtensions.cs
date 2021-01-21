@@ -3,8 +3,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Net.Http;
 using WebApiClientCore;
-using WebApiClientCore.ResponseCaches;
-using WebApiClientCore.Serialization;
+using WebApiClientCore.Implementations;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -23,10 +22,11 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             services.AddOptions();
             services.AddMemoryCache();
-            services.TryAddSingleton<IXmlSerializer, XmlSerializer>();
-            services.TryAddSingleton<IJsonSerializer, JsonSerializer>();
-            services.TryAddSingleton<IKeyValueSerializer, KeyValueSerializer>();
-            services.TryAddSingleton<IResponseCacheProvider, ResponseCacheProvider>();
+
+            services.TryAddSingleton(typeof(IHttpApiActivator<>), typeof(HttpApiEmitActivator<>));
+            services.TryAddSingleton<IApiActionDescriptorProvider, DefaultApiActionDescriptorProvider>();
+            services.TryAddSingleton<IApiActionInvokerProvider, DefaultApiActionInvokerProvider>();
+            services.TryAddSingleton<IResponseCacheProvider, DefaultResponseCacheProvider>();
 
             var name = HttpApi.GetName(typeof(THttpApi));
             services.NamedHttpApiType(name, typeof(THttpApi));
@@ -36,7 +36,9 @@ namespace Microsoft.Extensions.DependencyInjection
                 var httpClient = serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient(name);
                 var httpApiOptions = serviceProvider.GetRequiredService<IOptionsMonitor<HttpApiOptions>>().Get(name);
                 var httpClientContext = new HttpClientContext(httpClient, serviceProvider, httpApiOptions, name);
-                return HttpApi.Create<THttpApi>(httpClientContext);
+                var actionInterceptor = new ApiActionInterceptor(httpClientContext);
+                var httpApiActivator = serviceProvider.GetRequiredService<IHttpApiActivator<THttpApi>>();
+                return httpApiActivator.CreateInstance(actionInterceptor);
             });
 
             return services.AddHttpClient(name);

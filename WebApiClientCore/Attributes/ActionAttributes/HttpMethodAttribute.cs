@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Net.Http;
 using System.Threading.Tasks;
-using WebApiClientCore.Exceptions;
 
 namespace WebApiClientCore.Attributes
 {
@@ -21,7 +20,7 @@ namespace WebApiClientCore.Attributes
         /// <summary>
         /// 获取请求相对路径
         /// </summary>
-        public string? Path { get; }
+        public HttpPath Path { get; }
 
         /// <summary>
         /// http请求方法描述特性
@@ -50,7 +49,7 @@ namespace WebApiClientCore.Attributes
         protected HttpMethodAttribute(HttpMethod method, string? path)
         {
             this.Method = method;
-            this.Path = path;
+            this.Path = HttpPath.Create(path);
             this.OrderIndex = int.MinValue + 1;
         }
 
@@ -58,48 +57,15 @@ namespace WebApiClientCore.Attributes
         /// 执行前
         /// </summary>
         /// <param name="context">上下文</param>
-        /// <exception cref="ApiInvalidConfigException"></exception>
         /// <returns></returns>
         public override Task OnRequestAsync(ApiRequestContext context)
         {
             var baseUri = context.HttpContext.RequestMessage.RequestUri;
-            var relative = string.IsNullOrEmpty(this.Path) ? null : new Uri(this.Path, UriKind.RelativeOrAbsolute);
-            var requestUri = GetRequestUri(baseUri, relative);
+            var requestUri = this.Path.MakeUri(baseUri);
 
             context.HttpContext.RequestMessage.Method = this.Method;
             context.HttpContext.RequestMessage.RequestUri = requestUri;
             return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// 获取请求URL
-        /// </summary>
-        /// <param name="baseUri"></param>
-        /// <param name="relative"></param>
-        /// <exception cref="ApiInvalidConfigException"></exception>
-        /// <returns></returns>
-        private static Uri? GetRequestUri(Uri? baseUri, Uri? relative)
-        {
-            if (baseUri == null)
-            {
-                if (relative != null && relative.IsAbsoluteUri == false)
-                {
-                    throw new ApiInvalidConfigException(Resx.required_HttpHost);
-                }
-                return relative;
-            }
-
-            if (relative == null)
-            {
-                return baseUri;
-            }
-
-            if (relative.IsAbsoluteUri == true)
-            {
-                return relative;
-            }
-
-            return new Uri(baseUri, relative);
         }
     }
 }

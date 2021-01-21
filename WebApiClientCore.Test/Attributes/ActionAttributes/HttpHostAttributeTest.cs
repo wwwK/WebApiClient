@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using WebApiClientCore.Attributes;
+using WebApiClientCore.Implementations;
 using Xunit;
 
 namespace WebApiClientCore.Test.Attributes.ActionAttributes
@@ -10,7 +11,7 @@ namespace WebApiClientCore.Test.Attributes.ActionAttributes
         [Fact]
         public async Task OnRequestAsyncTest()
         {
-            var apiAction = new ApiActionDescriptor(typeof(ITestApi).GetMethod("PostAsync"));
+            var apiAction = new DefaultApiActionDescriptor(typeof(ITestApi).GetMethod("PostAsync"));
             var context = new TestRequestContext(apiAction, string.Empty);
 
             Assert.Throws<ArgumentNullException>(() => new HttpHostAttribute(null));

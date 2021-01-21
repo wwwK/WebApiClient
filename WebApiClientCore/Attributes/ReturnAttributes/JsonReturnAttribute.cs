@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using WebApiClientCore.HttpContents;
+using WebApiClientCore.Internals.Utilities;
 
 namespace WebApiClientCore.Attributes
 {
@@ -12,7 +13,12 @@ namespace WebApiClientCore.Attributes
         /// <summary>
         /// text/json
         /// </summary>
-        private static readonly MediaTypeHeaderValue textJson = new MediaTypeHeaderValue("text/json");
+        private static readonly string textJson = "text/json";
+
+        /// <summary>
+        /// 问题描述json
+        /// </summary>
+        private static readonly string problemJson = "application/problem+json";
 
         /// <summary>
         /// json内容的结果特性
@@ -39,7 +45,9 @@ namespace WebApiClientCore.Attributes
         /// <returns></returns>
         protected override bool IsMatchAcceptContentType(MediaTypeHeaderValue? responseContentType)
         {
-            return base.IsMatchAcceptContentType(responseContentType) || base.IsMatchAcceptContentType(textJson);
+            return base.IsMatchAcceptContentType(responseContentType)
+                || MediaTypeUtil.IsMatch(textJson, responseContentType?.MediaType)
+                || MediaTypeUtil.IsMatch(problemJson, responseContentType?.MediaType);
         }
 
         /// <summary>
@@ -49,7 +57,7 @@ namespace WebApiClientCore.Attributes
         /// <returns></returns>
         public override async Task SetResultAsync(ApiResponseContext context)
         {
-            var resultType = context.ApiAction.Return.DataType.Type;
+            var resultType = context.ActionDescriptor.Return.DataType.Type;
             context.Result = await context.JsonDeserializeAsync(resultType).ConfigureAwait(false);
         }
     }

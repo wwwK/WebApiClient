@@ -1,9 +1,9 @@
-﻿using System;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using WebApiClientCore.Attributes;
+using WebApiClientCore.Implementations;
 using Xunit;
 
 
@@ -21,7 +21,7 @@ namespace WebApiClientCore.Test.Attributes
         [Fact]
         public async Task OnRequestAsync_Parameter()
         {
-            var apiAction = new ApiActionDescriptor(typeof(ITestApi).GetMethod("PostAsync"));
+            var apiAction = new DefaultApiActionDescriptor(typeof(ITestApi).GetMethod("PostAsync"));
             var context = new TestRequestContext(apiAction, "laojiu");
             context.HttpContext.RequestMessage.Method = HttpMethod.Post;
             var parameterContext = new ApiParameterContext(context, 0);
@@ -35,7 +35,7 @@ namespace WebApiClientCore.Test.Attributes
         [Fact]
         public async Task OnRequestAsync()
         {
-            var apiAction = new ApiActionDescriptor(typeof(ITestApi).GetMethod("PostAsync"));
+            var apiAction = new DefaultApiActionDescriptor(typeof(ITestApi).GetMethod("PostAsync"));
             var context = new TestRequestContext(apiAction, string.Empty);
             context.HttpContext.RequestMessage.Method = HttpMethod.Post;
 

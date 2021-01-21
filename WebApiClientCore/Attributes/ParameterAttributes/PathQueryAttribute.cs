@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using WebApiClientCore.Exceptions;
+using WebApiClientCore.Internals;
 
 namespace WebApiClientCore.Attributes
 {
@@ -30,9 +31,19 @@ namespace WebApiClientCore.Attributes
                 throw new ApiInvalidConfigException(Resx.required_HttpHost);
             }
 
-            var keyValues = context.SerializeToKeyValues().CollectAs(this.CollectionFormat);
+            var keyValues = this.SerializeToKeyValues(context).CollectAs(this.CollectionFormat);
             context.HttpContext.RequestMessage.RequestUri = this.CreateUri(uri, keyValues);
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// 序列化参数为keyValue
+        /// </summary>
+        /// <param name="context">上下文</param>
+        /// <returns></returns>
+        protected virtual IEnumerable<KeyValue> SerializeToKeyValues(ApiParameterContext context)
+        {
+            return context.SerializeToKeyValues();
         }
 
         /// <summary>
@@ -43,15 +54,16 @@ namespace WebApiClientCore.Attributes
         /// <returns></returns>
         protected virtual Uri CreateUri(Uri uri, IEnumerable<KeyValue> keyValues)
         {
-            var editor = new UriEditor(uri);
+            var uriValue = new UriValue(uri);
             foreach (var keyValue in keyValues)
             {
-                if (editor.Replace(keyValue.Key, keyValue.Value) == false)
+                uriValue = uriValue.Replace(keyValue.Key, keyValue.Value, out var replaced);
+                if (replaced == false)
                 {
-                    editor.AddQuery(keyValue.Key, keyValue.Value);
+                    uriValue = uriValue.AddQuery(keyValue.Key, keyValue.Value);
                 }
             }
-            return editor.Uri;
+            return uriValue.ToUri();
         }
     }
 }
