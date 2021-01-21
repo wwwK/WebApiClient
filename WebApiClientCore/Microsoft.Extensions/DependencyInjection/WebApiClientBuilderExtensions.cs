@@ -30,6 +30,18 @@ namespace Microsoft.Extensions.DependencyInjection
         }
 
         /// <summary>
+        /// 在编译时生成接口代理类
+        /// 运行时通过查找类型代理类型创建实例
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <returns></returns>
+        public static IWebApiClientBuilder AddHttpApiSourceActivator(this IWebApiClientBuilder builder)
+        {
+            builder.Services.AddSingleton(typeof(IHttpApiActivator<>), typeof(HttpApiSourceActivator<>));
+            return builder;
+        }
+
+        /// <summary>
         /// 当非GET或HEAD请求的缺省参数特性声明时
         /// 为复杂参数类型的参数应用JsonContentAttribute
         /// </summary>

@@ -1,25 +1,26 @@
 ﻿using System;
 using System.Reflection;
 using WebApiClientCore.Exceptions;
+using WebApiClientCore.Internals.Utilities;
 
-namespace WebApiClientCore
+namespace WebApiClientCore.Implementations
 {
     /// <summary>
     /// 表示THttpApi的实例创建器
     /// 通过查找类型代理类型创建实例
     /// </summary>
     /// <typeparam name="THttpApi"></typeparam>
-    class HttpApiSourceActivator<THttpApi> : HttpApiActivator<THttpApi>
+    public class HttpApiSourceActivator<THttpApi> : HttpApiActivator<THttpApi>
     {
         /// <summary>
-        /// 代理类
+        /// 通过查找类型代理类型创建实例
         /// </summary>
-        private static readonly Type? proxyType = FindProxyType(typeof(THttpApi));
-
-        /// <summary>
-        /// 获取是否支持
-        /// </summary>
-        public static bool IsSupported => proxyType != null;
+        /// <param name="apiActionDescriptorProvider"></param>
+        /// <param name="actionInvokerProvider"></param>
+        public HttpApiSourceActivator(IApiActionDescriptorProvider apiActionDescriptorProvider, IApiActionInvokerProvider actionInvokerProvider)
+            : base(apiActionDescriptorProvider, actionInvokerProvider)
+        {
+        }
 
         /// <summary>
         /// 创建实例工厂
@@ -27,16 +28,14 @@ namespace WebApiClientCore
         /// <exception cref="NotSupportedException"></exception>
         /// <exception cref="ProxyTypeCreateException"></exception>
         /// <returns></returns>
-        protected override Func<IActionInterceptor, THttpApi> CreateFactory()
+        protected override Func<IApiActionInterceptor, ApiActionInvoker[], THttpApi> CreateFactory()
         {
+            var proxyType = FindProxyType(typeof(THttpApi));
             if (proxyType == null)
             {
                 throw new NotSupportedException();
             }
-
-            var actionInvokers = this.GetActionInvokers();
-            var proxyTypeCtor = Lambda.CreateCtorFunc<IActionInterceptor, IActionInvoker[], THttpApi>(proxyType);
-            return (interceptor) => proxyTypeCtor(interceptor, actionInvokers);
+            return Lambda.CreateCtorFunc<IApiActionInterceptor, ApiActionInvoker[], THttpApi>(proxyType);
         }
 
         /// <summary>

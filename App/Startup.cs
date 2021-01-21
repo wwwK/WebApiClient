@@ -44,6 +44,12 @@ namespace App
             // Ìí¼Ó¿ØÖÆÆ÷
             services.AddControllers().AddXmlSerializerFormatters();
 
+
+            services
+                .AddWebApiClient()
+                //.AddHttpApiEmitActivator()
+                .AddHttpApiSourceActivator();
+
             services.AddHttpApi<IXX<User>>();
 
             // ×¢²áuserApi

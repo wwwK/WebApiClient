@@ -20,7 +20,7 @@ namespace WebApiClientCore.SourceGenerators.HttpApiProxy
         /// <summary>
         /// 拦截器变量名
         /// </summary>
-        private readonly string interceptorFieldName = $"interceptor_{Environment.TickCount}";
+        private readonly string actionInterceptorFieldName = $"actionInterceptor_{Environment.TickCount}";
 
         /// <summary>
         /// action执行器变量名
@@ -103,14 +103,14 @@ namespace WebApiClientCore.SourceGenerators.HttpApiProxy
             builder.AppendLine("\t{");
 
             builder.AppendLine("\t\t[DebuggerBrowsable(DebuggerBrowsableState.Never)]");
-            builder.AppendLine($"\t\tprivate readonly IActionInterceptor {this.interceptorFieldName};");
+            builder.AppendLine($"\t\tprivate readonly IApiActionInterceptor {this.actionInterceptorFieldName};");
 
             builder.AppendLine("\t\t[DebuggerBrowsable(DebuggerBrowsableState.Never)]");
-            builder.AppendLine($"\t\tprivate readonly IActionInvoker[] {this.actionInvokersFieldName};");
+            builder.AppendLine($"\t\tprivate readonly ApiActionInvoker[] {this.actionInvokersFieldName};");
 
-            builder.AppendLine($"\t\tpublic {this.CtorName}(IActionInterceptor interceptor,IActionInvoker[] actionInvokers)");
+            builder.AppendLine($"\t\tpublic {this.CtorName}(IApiActionInterceptor actionInterceptor,ApiActionInvoker[] actionInvokers)");
             builder.AppendLine("\t\t{");
-            builder.AppendLine($"\t\t\tthis.{this.interceptorFieldName} = interceptor;");
+            builder.AppendLine($"\t\t\tthis.{this.actionInterceptorFieldName} = actionInterceptor;");
             builder.AppendLine($"\t\t\tthis.{this.actionInvokersFieldName} = actionInvokers;");
             builder.AppendLine("\t\t}");
 
@@ -150,7 +150,7 @@ namespace WebApiClientCore.SourceGenerators.HttpApiProxy
 
             builder.AppendLine($"\t\tpublic {method.ReturnType} {method.Name}( {parametersString} )");
             builder.AppendLine("\t\t{");
-            builder.AppendLine($"\t\t\treturn ({method.ReturnType})this.{this.interceptorFieldName}.Intercept(this.{this.actionInvokersFieldName}[{index}], new object[] {{ {parameterNamesString} }});");
+            builder.AppendLine($"\t\t\treturn ({method.ReturnType})this.{this.actionInterceptorFieldName}.Intercept(this.{this.actionInvokersFieldName}[{index}], new object[] {{ {parameterNamesString} }});");
             builder.AppendLine("\t\t}");
             return builder.ToString();
         }
